@@ -22,6 +22,8 @@ class HomeTableViewController: UITableViewController {
         loadTweets()
         myRefreshControl.addTarget(self, action: #selector(loadTweets), for: .valueChanged)
         tableView.refreshControl = myRefreshControl
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 150
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -31,7 +33,7 @@ class HomeTableViewController: UITableViewController {
     
     @objc func loadTweets() {
         
-        numberOfTweets = 20
+        numberOfTweets = 5
         let myUrl = "https://api.twitter.com/1.1/statuses/home_timeline.json"
         let myParams = ["count": numberOfTweets]
         
@@ -52,7 +54,7 @@ class HomeTableViewController: UITableViewController {
     
     func loadMoreTweets() {
         let myUrl = "https://api.twitter.com/1.1/statuses/home_timeline.json"
-        numberOfTweets = numberOfTweets + 20
+        numberOfTweets = numberOfTweets + 5
         let myParams = ["count": numberOfTweets]
         
         TwitterAPICaller.client?.getDictionariesRequest(url: myUrl, parameters: myParams as [String : Any], success: { (tweets: [NSDictionary]) in
@@ -88,12 +90,15 @@ class HomeTableViewController: UITableViewController {
         cell.userNameLabel.text = user?["name"] as? String
         cell.tweetContent.text = tweetArray[indexPath.row]["text"] as? String
         
-        let imageUrl = URL(string: (user?["profile_image_url_https"] as? String)!)
+        let imageUrl = URL(string: (user?["profile_image_url_https"] as? String)!.replacingOccurrences(of: "_normal", with: "", options: NSString.CompareOptions.literal, range: nil))
         let data = try? Data(contentsOf: imageUrl!)
         
         if let imageData = data {
             cell.profileImageView.image = UIImage(data: imageData)
         }
+        
+        cell.setFavorite(tweetArray[indexPath.row]["favorited"] as! Bool)
+        cell.tweetId = tweetArray[indexPath.row]["id"] as! Int
         
         return cell
     }
